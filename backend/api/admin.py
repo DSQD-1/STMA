@@ -4,7 +4,11 @@ from sqlalchemy.orm import Session
 from database import get_db
 from config import ADMIN_TELEGRAM_ID
 
-from models import DisplayStats, PremiumPlan, PromoCode
+from models import (
+    DisplayStats,
+    PremiumPlan,
+    PromoCode
+)
 
 
 router = APIRouter(
@@ -13,7 +17,6 @@ router = APIRouter(
 )
 
 
-# Проверка владельца
 def check_admin(telegram_id: int):
 
     if telegram_id != ADMIN_TELEGRAM_ID:
@@ -22,34 +25,30 @@ def check_admin(telegram_id: int):
             detail="Access denied"
         )
 
-    return True
 
-
-# Статистика
 @router.get("/stats")
-def get_stats(
+def stats(
     telegram_id: int,
     db: Session = Depends(get_db)
 ):
 
     check_admin(telegram_id)
 
-    stats = db.query(
+    data = db.query(
         DisplayStats
     ).first()
 
-    if not stats:
-        stats = DisplayStats()
-        db.add(stats)
+    if not data:
+        data = DisplayStats()
+        db.add(data)
         db.commit()
-        db.refresh(stats)
+        db.refresh(data)
 
-    return stats
+    return data
 
 
-# Изменить ручные показатели
-@router.post("/stats/update")
-def update_stats(
+@router.post("/stats")
+def change_stats(
     telegram_id: int,
     users: int,
     messages: int,
@@ -59,18 +58,18 @@ def update_stats(
 
     check_admin(telegram_id)
 
-    stats = db.query(
+    data = db.query(
         DisplayStats
     ).first()
 
-    if not stats:
-        stats = DisplayStats()
-        db.add(stats)
+    if not data:
+        data = DisplayStats()
+        db.add(data)
 
-    stats.users_count = users
-    stats.messages_count = messages
-    stats.deleted_count = deleted
-    stats.manual_mode = True
+    data.users_count = users
+    data.messages_count = messages
+    data.deleted_count = deleted
+    data.manual_mode = True
 
     db.commit()
 
@@ -79,9 +78,8 @@ def update_stats(
     }
 
 
-# Добавить тариф Premium
-@router.post("/premium/add")
-def add_plan(
+@router.post("/premium")
+def create_premium_plan(
     telegram_id: int,
     name: str,
     days: int,
@@ -105,9 +103,8 @@ def add_plan(
     }
 
 
-# Создать промокод
-@router.post("/promo/add")
-def add_promo(
+@router.post("/promo")
+def create_promo(
     telegram_id: int,
     code: str,
     days: int,
