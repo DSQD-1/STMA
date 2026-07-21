@@ -4,6 +4,8 @@ from database import engine
 from models import Base
 
 from api import admin
+from api import users
+from api import messages
 
 
 app = FastAPI(
@@ -13,13 +15,23 @@ app = FastAPI(
 )
 
 
+# Создание таблиц
 Base.metadata.create_all(
     bind=engine
 )
 
 
+# Подключение API
 app.include_router(
     admin.router
+)
+
+app.include_router(
+    users.router
+)
+
+app.include_router(
+    messages.router
 )
 
 
@@ -28,8 +40,7 @@ def home():
 
     return {
         "app": "STMA",
-        "status": "online",
-        "version": "1.0"
+        "status": "online"
     }
 
 
